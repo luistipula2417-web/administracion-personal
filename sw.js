@@ -1,5 +1,5 @@
-const CACHE = 'king-v5';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './bg-king.webp'];
+const CACHE = 'king-v6';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './bg-king.webp', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
