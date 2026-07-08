@@ -867,10 +867,33 @@ function vConfig(){
     ${Object.entries({'TIPO MOV.':CFG.tipoMov,'CLASE 50/30/20':CFG.clase,'CATEG. INGRESO':CFG.catIng,'CATEG. GASTO':CFG.catGas,'CATEG. NEGOCIO':CFG.catNeg,'MÉTODO PAGO':CFG.metodo,'ESTADO':CFG.estado,'TIPO CLIENTE':CFG.tipoCli})
       .map(([k,v])=>`<div style="padding:9px 0;border-bottom:1px solid #1a1a1e"><div class="muted" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase">${k}</div>
         <div style="margin-top:5px">${v.map(x=>`<span style="display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:2px 9px;margin:2px 3px 0 0;font-size:11px">${esc(x)}</span>`).join('')}</div></div>`).join('')}</div>
-    <div class="sheetbtns" style="margin-top:16px"><button class="btn gho" id="guia2">📖 Guía</button><button class="btn del" id="reset">Borrar datos locales</button></div>`;
+    <div class="sheetbtns" style="margin-top:16px"><button class="btn gho" id="guia2">📖 Guía</button><button class="btn del" id="reset">Borrar datos locales</button></div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;color:#c0392b;margin-bottom:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase">⚠ Zona de peligro</div>
+      <button class="btn del" id="borrarTodo" style="width:100%;justify-content:center">🗑 Borrar todos mis datos / Empezar de cero</button>
+    </div>`;
   const lo=w.querySelector('#logout'); if(lo)lo.onclick=async()=>{ await Store.signOut(); LS.cfg=null; location.reload(); };
   w.querySelector('#guia2').onclick=()=>route('guia');
   w.querySelector('#reset').onclick=()=>{ if(confirm('¿Borrar datos locales de este dispositivo?')){ try{localStorage.removeItem('king_db')}catch{} _mem.db=null; location.reload(); } };
+  w.querySelector('#borrarTodo').onclick=async()=>{
+    if(!confirm('⚠️ ¿Borrar TODOS tus datos? Esta acción es IRREVERSIBLE.'))return;
+    if(!confirm('🔴 Confirma de nuevo: ¿ELIMINAR TODOS los registros y empezar de cero?'))return;
+    try{
+      if(Store.mode==='cloud'){
+        const userId=Store.user?.id;
+        if(!userId){toast('Sin sesión activa');return;}
+        for(const t of TABLES){await Store.sb.from(t).delete().eq('user_id',userId);}
+        await Store.sb.from('settings').delete().eq('user_id',userId);
+        try{localStorage.removeItem('king_db')}catch{}
+        _mem.db=null;
+      }else{
+        try{localStorage.removeItem('king_db')}catch{}
+        _mem.db=null;
+      }
+      toast('Datos borrados ✓');
+      setTimeout(()=>location.reload(),1200);
+    }catch(e){toast('Error al borrar: '+(e.message||'algo falló'));}
+  };
   return w;
 }
 
