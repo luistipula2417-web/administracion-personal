@@ -287,6 +287,8 @@ body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,.80);z-inde
    Réplica fiel del Excel ADMINISTRACION_GENERAL · 16 hojas
    Azul = escribes · Dorado = se calcula solo
 =================================================================== */
+const SB_URL = "https://qvzrahishjxfdcfvxame.supabase.co";
+const SB_KEY = "sb_publishable_cvpIEh_inWvVVn9Tmi4FtQ_fkRjcste";
 let _mem={};
 const LS = {
   get cfg(){ try{return JSON.parse(localStorage.getItem('king_cfg')||'null')}catch{return _mem.cfg||null} },
@@ -996,7 +998,7 @@ function screenStart(){
     </div>
     <button class="btn pri" id="loginBtn" style="max-width:360px;width:100%;margin-top:12px;padding:15px;font-size:15px;letter-spacing:.06em;
       box-shadow:0 6px 28px rgba(212,175,55,.35),0 2px 8px rgba(0,0,0,.5)">Iniciar sesión</button>
-    <div class="note" style="margin-top:22px">Tus datos quedan guardados en este dispositivo.<br>Sistema de administración personal.</div>
+    <div class="note" style="margin-top:22px">Tus datos se sincronizan en la nube.<br>Sistema de administración personal.</div>
   </div>`;
   const btn=document.getElementById('loginBtn');
   const lEm=document.getElementById('lEm');
@@ -1008,9 +1010,34 @@ function screenStart(){
   btn.onclick=async()=>{
     const em=lEm.value.trim(), pw=lPw.value;
     if(!em||!pw){ toast('Completa correo y contraseña'); return; }
-    btn.textContent='Entrando…'; btn.style.opacity='.75';
-    await Store.initLocal(); route('inicio');
-    /* preparado para Supabase: await Store.initCloud(url,key); await Store.signIn(em,pw); */
+    btn.textContent='Entrando…'; btn.style.opacity='.75'; btn.disabled=true;
+    const reset=()=>{ btn.textContent='Iniciar sesión'; btn.style.opacity='1'; btn.disabled=false; };
+    try {
+      if(!Store.sb) await Store.initCloud(SB_URL, SB_KEY);
+      try {
+        await Store.signIn(em, pw);
+      } catch(e) {
+        const msg=e.message||'';
+        if(msg.includes('Invalid login credentials')||msg.includes('invalid_credentials')||msg.includes('user not found')) {
+          toast('Usuario no encontrado. Creando cuenta…');
+          await Store.signUp(em, pw);
+          await Store.signIn(em, pw);
+          toast('¡Cuenta creada y sesión iniciada!');
+        } else { throw e; }
+      }
+      await afterAuth();
+    } catch(e) {
+      reset();
+      const msg=e.message||'';
+      if(msg.includes('Email not confirmed')) {
+        toast('Revisa tu correo y confirma tu cuenta antes de ingresar.');
+      } else if(msg.includes('fetch')||msg.includes('network')||msg.includes('Failed to fetch')) {
+        toast('Sin conexión. Cargando modo offline…');
+        await Store.initLocal(); route('inicio');
+      } else {
+        toast(msg||'Error al iniciar sesión');
+      }
+    }
   };
 }
 function screenConnect(){
@@ -1071,11 +1098,10 @@ async function afterAuth(){
       });
     } catch {}
   }
-  const cfg=LS.cfg;
-  if(cfg&&cfg.url&&cfg.key){ try{ await Store.initCloud(cfg.url,cfg.key);
-    if(Store.user){ await Store.pull(); if(Store.empty())await afterAuth(); else route('inicio'); } else screenLogin(); return;
-  }catch(e){} }
-  if(LS.local){ await Store.initLocal(); route('inicio'); return; }
+  try {
+    await Store.initCloud(SB_URL, SB_KEY);
+    if(Store.user){ await Store.pull(); if(Store.empty()) await afterAuth(); else route('inicio'); return; }
+  } catch(e) {}
   screenStart();
 })();
 </script>
