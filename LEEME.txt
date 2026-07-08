@@ -1,0 +1,47 @@
+──────────────────────────────────────────
+  KING · Sistema Pro · Guía rápida
+──────────────────────────────────────────
+
+ARCHIVOS
+  index.html ............ la app completa (16 módulos)
+  manifest.webmanifest .. PWA (ícono corona, nombre)
+  sw.js ................. modo offline
+  schema.sql ............ tablas de Supabase
+  LEEME.txt ............. esto
+
+──────────────────────────────────────────
+PASO 1 · Supabase (una sola vez)
+──────────────────────────────────────────
+1. Proyecto en supabase.com
+2. SQL Editor → pega TODO schema.sql → Run
+3. Project Settings → API → copia:
+     • Project URL  (https://xxxx.supabase.co)
+     • anon public key  (eyJ...)
+   (Authentication → Providers → Email: desactiva
+    "Confirm email" si quieres entrar sin confirmar)
+
+──────────────────────────────────────────
+PASO 2 · Subir a Vercel
+──────────────────────────────────────────
+1. Sube esta carpeta a Vercel
+2. Abre el link en tu celular
+3. "Conectar Supabase" → URL + anon key
+     → crea tu cuenta → "cargar datos del Excel"
+4. Chrome → "Agregar a pantalla de inicio"
+   (iPhone: Safari → Compartir → "Añadir a inicio")
+
+Solo tú ves tu data. Entras desde cualquier
+dispositivo con tu email y clave.
+
+──────────────────────────────────────────
+¿Solo verla localmente?
+──────────────────────────────────────────
+Abre index.html en el navegador y toca
+"Probar ya con tus datos del Excel".
+Guarda solo en este dispositivo (localStorage).
+
+──────────────────────────────────────────
+REGLA DE ORO
+──────────────────────────────────────────
+Campos normales = escribes.
+Campos DORADOS = se calculan solos. Igual que tu Excel.
