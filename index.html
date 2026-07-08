@@ -928,7 +928,7 @@ const SCHEMAS={
     {k:'categoria',l:'Categoría',t:'select',o:CFG.catNeg},{k:'cant',l:'Cantidad',t:'number'},{k:'total',l:'Total S/',t:'number'},{k:'estado',l:'Estado',t:'select',o:CFG.estado}]},
   movimientos:{title:'Movimiento personal',fields:[
     {k:'fecha',l:'Fecha',t:'date'},{k:'tipo',l:'Tipo',t:'select',o:CFG.tipoMov},{k:'clase',l:'Clase 50/30/20',t:'select',o:CFG.clase},
-    {k:'categoria',l:'Categoría',t:'text'},{k:'descripcion',l:'Descripción',t:'text'},{k:'metodo',l:'Método',t:'select',o:CFG.metodo},{k:'monto',l:'Monto S/',t:'number'}]},
+    {k:'categoria',l:'Categoría',t:'select',o:CFG.catGas},{k:'descripcion',l:'Descripción',t:'text'},{k:'metodo',l:'Método',t:'select',o:CFG.metodo},{k:'monto',l:'Monto S/',t:'number'}]},
   inventario:{title:'Producto',fields:[
     {k:'codigo',l:'Código',t:'text'},{k:'producto',l:'Producto',t:'text'},{k:'categoria',l:'Categoría',t:'text'},
     {k:'stock',l:'Stock',t:'number'},{k:'stock_min',l:'Stock mínimo',t:'number'},{k:'costo_u',l:'Costo unitario',t:'number'},{k:'p_venta',l:'Precio venta',t:'number'}],
@@ -962,6 +962,18 @@ function openForm(table,row){
     if(f.t==='select'){ inp=$(`<select></select>`); inp.innerHTML='<option value=""></option>'+f.o.map(o=>`<option ${data[f.k]===o?'selected':''}>${esc(o)}</option>`).join(''); }
     else { inp=$(`<input type="${f.t}">`); inp.value=data[f.k]??''; if(f.t==='number'){inp.step='any';inp.inputMode='decimal';} }
     inp.dataset.k=f.k; fd.innerHTML=`<label>${f.l}</label>`; fd.appendChild(inp); sheet.appendChild(fd); });
+  if(table==='movimientos'){
+    const tipoSel=sheet.querySelector('[data-k="tipo"]');
+    const catSel=sheet.querySelector('[data-k="categoria"]');
+    const updateCat=()=>{
+      const tipo=tipoSel.value;
+      const opts=tipo==='Ingreso'?CFG.catIng:tipo==='Gasto'?CFG.catGas:['Otros'];
+      const cur=catSel.value;
+      catSel.innerHTML='<option value=""></option>'+opts.map(o=>`<option${cur===o?' selected':''}>${esc(o)}</option>`).join('');
+    };
+    tipoSel.addEventListener('change',updateCat);
+    updateCat();
+  }
   let calcEl;
   if(sc.calc){ calcEl=$(`<div class="field calc"><label>${sc.calc(data)[0]}</label><input readonly tabindex="-1" value="${sc.calc(data)[1]}"></div>`); sheet.appendChild(calcEl); }
   const updCalc=()=>{ if(!sc.calc)return; const tmp={...data}; sheet.querySelectorAll('[data-k]').forEach(i=>tmp[i.dataset.k]=i.type==='number'?(+i.value||0):i.value);
