@@ -493,8 +493,9 @@ function shell(inner){
   root.appendChild(app);
   document.getElementById('view').appendChild(inner);
   document.getElementById('cfgbtn').onclick=()=>route('config');
-  if(['caccer','movimientos','metas'].includes(CURRENT)){
-    const ab=$(`<button class="addbtn"><span class="p">+</span> Registrar</button>`);
+  if(['caccer','movimientos','metas','habitos'].includes(CURRENT)){
+    const label=CURRENT==='habitos'?'Nuevo hábito':'Registrar';
+    const ab=$(`<button class="addbtn"><span class="p">+</span> ${label}</button>`);
     ab.onclick=()=>openForm(CURRENT,null); app.appendChild(ab);
   }
 }
@@ -970,7 +971,9 @@ const SCHEMAS={
     calc:r=>['Saldo',PEN(Calc.saldo(r))]},
   holdeo:{title:'Holdeo del mes',fields:[
     {k:'mes',l:'Mes',t:'text'},{k:'meta',l:'Meta S/',t:'number'},{k:'aportado',l:'Aportado S/',t:'number'}],
-    calc:r=>['Faltó',PEN(Calc.holdeoFalta(r))]}
+    calc:r=>['Faltó',PEN(Calc.holdeoFalta(r))]},
+  habitos:{title:'Hábito',fields:[
+    {k:'nombre',l:'Nombre del hábito',t:'text'}]}
 };
 function openForm(table,row){
   const sc=SCHEMAS[table]; if(!sc)return;
@@ -978,6 +981,7 @@ function openForm(table,row){
   if(isNew&&sc.fields.find(f=>f.k==='fecha'))data.fecha=today();
   if(isNew&&table==='metas')data.fuente='manual';
   if(isNew&&table==='holdeo')data.meta=900;
+  if(isNew&&table==='habitos')data.dias=Array(31).fill(false);
   document.querySelectorAll('.scrim,.sheet').forEach(e=>e.remove());
   const scrim=$('<div class="scrim"></div>'); const sheet=$('<div class="sheet"></div>');
   sheet.innerHTML=`<div class="grip"></div><h3>${isNew?'Nuevo':'Editar'} · ${sc.title}</h3>`;
