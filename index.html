@@ -138,9 +138,12 @@ a{color:var(--gold);text-decoration:none}
 .hgrid{border-collapse:collapse;font-size:11px}
 .hgrid th,.hgrid td{border:1px solid #1c1c20;text-align:center;min-width:24px;height:30px;padding:0}
 .hgrid th{color:var(--muted2);font-weight:600;font-size:9px;position:sticky;top:0;background:var(--panel)}
-.hgrid td.nm{text-align:left;padding:0 10px;min-width:140px;position:sticky;left:0;background:var(--panel);
+.hgrid td.nm{text-align:left;padding:0 6px 0 10px;min-width:140px;position:sticky;left:0;background:var(--panel);
   font-family:Inter;font-weight:500;color:var(--ink);white-space:nowrap;z-index:2}
 .hgrid th.nm{position:sticky;left:0;z-index:3;text-align:left;padding-left:10px;min-width:140px}
+.hnamewrap{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.hedit{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:12px;padding:2px 4px;line-height:1;flex-shrink:0}
+.hedit:hover{color:var(--gold)}
 .hcell{cursor:pointer}
 .hcell.on{background:var(--gold);color:#1a1407;font-weight:700}
 .hgrid td.pct{color:var(--gold);font-family:'JetBrains Mono';font-weight:700;min-width:40px}
@@ -804,14 +807,27 @@ function vHabitos(db){
   let body='';
   H.forEach((h,hi)=>{ const dias=h.dias||Array(31).fill(false); let cells='',done=0;
     for(let d=0;d<31;d++){ const on=dias[d]; if(on)done++; cells+=`<td class="hcell ${on?'on':''}" data-h="${hi}" data-d="${d}">${on?'✓':''}</td>`; }
-    body+=`<tr><td class="nm">${esc(h.nombre)}</td>${cells}<td class="pct">${done}</td><td class="pct">${Math.round(done/31*100)}</td></tr>`; });
+    body+=`<tr><td class="nm"><div class="hnamewrap"><span class="hname">${esc(h.nombre)}</span><button class="hedit" data-h="${hi}">✎</button></div></td>${cells}<td class="pct logro" data-h="${hi}">${done}</td><td class="pct pctval" data-h="${hi}">${Math.round(done/31*100)}</td></tr>`; });
   let footer='<td class="nm" style="color:var(--gold-dim)">% día</td>';
-  for(let d=0;d<31;d++){ const c=H.filter(h=>(h.dias||[])[d]).length; footer+=`<td style="color:var(--gold-dim);font-size:9px">${H.length?Math.round(c/H.length*100):0}</td>`; }
+  for(let d=0;d<31;d++){ const c=H.filter(h=>(h.dias||[])[d]).length; footer+=`<td class="footpct" data-d="${d}" style="color:var(--gold-dim);font-size:9px">${H.length?Math.round(c/H.length*100):0}</td>`; }
   footer+='<td></td><td></td>';
   w.innerHTML=`<h2><span class="ic">🔥</span> SEGUIMIENTO DE HÁBITOS</h2><p class="subtitle">Marca cada día que cumplas. La constancia construye disciplina.</p>
     <div class="hwrap"><table class="hgrid"><thead><tr>${head}</tr></thead><tbody>${body}<tr>${footer}</tr></tbody></table></div>`;
-  w.querySelectorAll('.hcell').forEach(c=>c.onclick=async()=>{ const hi=+c.dataset.h,d=+c.dataset.d,h=H[hi];
-    h.dias=h.dias||Array(31).fill(false); h.dias[d]=!h.dias[d]; await Store.save('habitos',h); render(); });
+  const paintCell=(c,on)=>{ c.classList.toggle('on',on); c.textContent=on?'✓':''; };
+  const paintAgg=(hi,d)=>{ const h=H[hi]; const done=h.dias.filter(Boolean).length;
+    const logro=w.querySelector(`.logro[data-h="${hi}"]`); if(logro)logro.textContent=done;
+    const pctval=w.querySelector(`.pctval[data-h="${hi}"]`); if(pctval)pctval.textContent=Math.round(done/31*100);
+    const dayCount=H.filter(x=>(x.dias||[])[d]).length;
+    const footCell=w.querySelector(`.footpct[data-d="${d}"]`);
+    if(footCell)footCell.textContent=H.length?Math.round(dayCount/H.length*100):0; };
+  w.querySelectorAll('.hcell').forEach(c=>c.onclick=async()=>{
+    const hi=+c.dataset.h,d=+c.dataset.d,h=H[hi];
+    h.dias=h.dias||Array(31).fill(false); h.dias[d]=!h.dias[d];
+    paintCell(c,h.dias[d]); paintAgg(hi,d);
+    try{ await Store.save('habitos',h); }
+    catch(e){ h.dias[d]=!h.dias[d]; paintCell(c,h.dias[d]); paintAgg(hi,d); toast('Error: '+(e.message||e)); }
+  });
+  w.querySelectorAll('.hedit').forEach(btn=>btn.onclick=(e)=>{ e.stopPropagation(); openForm('habitos',H[+btn.dataset.h]); });
   return w;
 }
 
